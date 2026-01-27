@@ -6,7 +6,7 @@ from datetime import date
 
 class PerfilUsuarioBase(BaseModel):
     # Sua lista de "perguntas gerais sobre a pessoa"
-    data_nascimento: Optional[date] = None
+
     genero: Optional[str] = None
     escolaridade: Optional[str] = None
     estado_civil: Optional[str] = None

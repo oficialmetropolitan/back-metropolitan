@@ -8,6 +8,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from db import Base
 
 
+
+    
 class User(Base):
     __tablename__ = "users"
 
@@ -42,8 +44,6 @@ class PerfilUsuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
 
-    # Dados pessoais
-    data_nascimento = Column(Date, nullable=True)
     genero = Column(String(20), nullable=True)
     escolaridade = Column(String(100), nullable=True)
     estado_civil = Column(String(50), nullable=True)
@@ -67,21 +67,40 @@ class PerfilUsuario(Base):
     user = relationship("User", back_populates="perfil")
 
 
+class Lead(Base):
+    __tablename__ = "leads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String(150), nullable=False)
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    phone = Column(String(20), nullable=False)
+    cidade = Column(String(100), nullable=True)
+    estado = Column(String(2), nullable=True)
+    data_nascimento = Column(Date, nullable=True)
+    
+    # Relacionamento: Um Lead pode ter várias simulações
+    simulacoes = relationship("Simulacao", back_populates="lead")
+    
+    # Caso ele vire usuário depois
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
 class Simulacao(Base):
     __tablename__ = "simulacoes"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    
+    # AJUSTE: user_id agora é nullable=True (opcional no início)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    
+    # NOVO: Chave estrangeira para o Lead
+    lead_id = Column(Integer, ForeignKey("leads.id", ondelete="SET NULL"), nullable=True)
 
-   
     valor_desejado = Column(Numeric(12, 2), nullable=False) 
     prazo_meses = Column(Integer, nullable=False)          
     motivo_emprestimo = Column(String(150), nullable=False) 
     tipo_emprestimo = Column(String(50), nullable=False)   
 
-
     dados_especificos = Column(JSON, nullable=True)
-
 
     valor_parcela = Column(Numeric(12, 2), nullable=True)
     valor_total = Column(Numeric(12, 2), nullable=True)
@@ -90,5 +109,6 @@ class Simulacao(Base):
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String, default="pendente")
 
+    # Relacionamentos
     user = relationship("User", back_populates="simulacoes")
-
+    lead = relationship("Lead", back_populates="simulacoes") 
