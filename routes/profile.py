@@ -60,3 +60,24 @@ def atualizar_ou_criar_perfil(
     db.commit()
     db.refresh(perfil)
     return perfil
+
+@router.get("/", response_model=list[schemas.PerfilUsuarioOut]) # Esta é a nova rota
+def listar_todos_Perfis(
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(security.get_current_admin)
+):
+    return db.query(PerfilUsuario).all()
+
+@router.get("admin/{perfil_id}", response_model=schemas.PerfilUsuarioOut)
+def buscar_usuario_por_id(
+    perfil_id: int, 
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(security.get_current_admin)
+):
+    """Rota administrativa para puxar dados do Perfil de um usuario , incluindo CPF."""
+    perfil = db.query(PerfilUsuario).filter(PerfilUsuario.id == perfil_id).first()
+    
+    if not perfil:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        
+    return perfil
