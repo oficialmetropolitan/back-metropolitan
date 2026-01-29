@@ -179,3 +179,5 @@ def vincular_simulacoes(
     
     db.commit()
     return {"message": f"{len(simulacoes_pendentes)} simulações vinculadas com sucesso."}
+
+
