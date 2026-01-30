@@ -181,3 +181,22 @@ def vincular_simulacoes(
     return {"message": f"{len(simulacoes_pendentes)} simulações vinculadas com sucesso."}
 
 
+@router.patch("/admin/{simulacao_id}/ajustar", response_model=schemas.SimulacaoOut)
+def admin_ajustar_valores(
+    simulacao_id: int,
+    payload: schemas.SimulacaoAjusteFinanceiro,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(security.get_current_admin)
+):
+    simulacao = db.query(Simulacao).filter(Simulacao.id == simulacao_id).first()
+    if not simulacao:
+        raise HTTPException(status_code=404, detail="Simulação não encontrada")
+
+
+    simulacao.valor_parcela = payload.valor_parcela
+    simulacao.valor_total = payload.valor_total
+    simulacao.juros_total = payload.juros_total
+    
+    db.commit()
+    db.refresh(simulacao)
+    return simulacao
