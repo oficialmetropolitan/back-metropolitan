@@ -31,7 +31,7 @@ class UserOut(UserBase):
     id: int
     created_at: datetime
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Schemas dze Perfil ---
 class PerfilUsuarioBase(BaseModel):
@@ -68,7 +68,7 @@ class PerfilUsuarioCreate(PerfilUsuarioBase):
 class PerfilUsuarioOut(PerfilUsuarioBase):
     user_id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- SCHEMAS DE SIMULAÇÃO (ATUALIZADOS) ---
 class SimulacaoBase(BaseModel):
@@ -93,7 +93,7 @@ class SimulacaoOut(SimulacaoBase):
     user_id: int
     criado_em: datetime
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Schemas para Análise de Crédito ---
 class CreditAnalysisRequest(BaseModel):
