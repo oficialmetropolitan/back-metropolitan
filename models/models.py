@@ -43,7 +43,7 @@ class PerfilUsuario(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
-
+    data_nascimento = Column(Date, nullable=False)
     genero = Column(String(20), nullable=True)
     escolaridade = Column(String(100), nullable=True)
     estado_civil = Column(String(50), nullable=True)
