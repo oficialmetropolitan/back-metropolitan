@@ -22,6 +22,7 @@ class SimulacaoPublicaRequest(BaseModel):
     valor_desejado: float
     prazo_meses: int
     tipo_emprestimo: str
+    dados_especificos: Optional[Dict[str, Any]] = None
 
 # NOVO: Para criar o Lead junto com a Simulação (Passo de conversão)
 class LeadComSimulacaoCreate(SimulacaoBase):

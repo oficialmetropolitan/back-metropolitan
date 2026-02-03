@@ -8,31 +8,41 @@ from models.models import Simulacao, User, Lead # Certifique-se de ter criado a 
 
 router = APIRouter(prefix="/api/simulacoes", tags=["Simulações"])
 
-# Função de lógica interna (mantida e centralizada)
-def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emprestimo: str):
-    """
-    Calcula os valores de empréstimo com base na Tabela Price, 
-    conforme identificado no Simulador Metrobank.
-    """
-    # 1. Definição da taxa de juros mensal
-    taxa_juros_mensal = 0.02  # Taxa padrão (2%)
-    if tipo_emprestimo == 'imovel-garantia':
-        taxa_juros_mensal = 0.01
-    elif tipo_emprestimo == 'veiculo-garantia':
-        taxa_juros_mensal = 0.015
 
-    # 2. Cálculo da Parcela (Fórmula da Tabela Price)
-    # PMT = PV * [i * (1 + i)^n] / [(1 + i)^n - 1]
+# Função de lógica interna (mantida e centralizada)
+def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emprestimo: str, dados_especificos: dict = None):
+    """
+    Calcula os valores de empréstimo com base na Tabela Price.
+    Ajusta a taxa de juros conforme o produto e garantias.
+    """
+    # 1. Definição da taxa de juros padrão
+    taxa_juros_mensal = 0.03  
+    
+    # 2. Lógica de faixas de taxa por produto
+    if tipo_emprestimo == 'imovel-garantia':
+        # Se for imóvel caro (Ex: > 500k), a taxa cai para 1%
+        if dados_especificos and float(dados_especificos.get("valor_imovel", 0)) >= 500000:
+            taxa_juros_mensal = 0.01
+        else:
+            taxa_juros_mensal = 0.015 # Ex: 1.5% para Home Equity padrão
+            
+    elif tipo_emprestimo == 'veiculo-garantia':
+        taxa_juros_mensal = 0.022 # Ex: 2.2% para Veículos
+        
+    elif tipo_emprestimo == 'credito-consignado':
+        taxa_juros_mensal = 0.018 # Taxa menor para consignado
+    
+    # i = taxa, n = meses, pv = valor presente
     i = taxa_juros_mensal
     n = prazo_meses
     pv = valor_desejado
 
+    # Cálculo da Parcela (Fórmula Price)
     if i > 0:
         valor_parcela = pv * (i * (1 + i)**n) / ((1 + i)**n - 1)
     else:
         valor_parcela = pv / n
 
-    # 3. Cálculo dos totais
     valor_total = valor_parcela * n
     juros_total = valor_total - pv
     
@@ -46,14 +56,14 @@ def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emp
 
 
 
-
 @router.post("/calcular-imediato")
 def calcular_imediato(payload: schemas.SimulacaoPublicaRequest):
+    # Passamos os dados_especificos (como valor do imóvel) para o cálculo
     return calcular_valores_simulacao(
         payload.valor_desejado,
         payload.prazo_meses,
         payload.tipo_emprestimo,
-        
+        payload.dados_especificos # Importante: adicione este campo no seu Schema Pydantic
     )
 
 @router.post("/salvar-lead", status_code=201)
@@ -75,19 +85,17 @@ def salvar_lead_e_simulacao(
         db.add(lead)
         db.flush()
 
-    # 2. Simulação (Salvando exatamente o que veio do front)
- 
+    # 2. Simulação (Salvando o Dossiê completo)
+    # Aqui guardamos o 'resultado' vindo do front para garantir fidelidade ao que o cliente viu
     simulacao = Simulacao(
         valor_desejado=payload.valor_desejado,
         prazo_meses=payload.prazo_meses,
         tipo_emprestimo=payload.tipo_emprestimo,
         motivo_emprestimo=payload.motivo_emprestimo,
-      
         dados_especificos={
             "entrada": payload.dados_entrada,
-            "resultado": payload.resultado_simulacao
+            "resultado_front": payload.resultado_simulacao
         },
-    
         valor_parcela=payload.resultado_simulacao.get("valor_parcela"),
         valor_total=payload.resultado_simulacao.get("valor_total"),
         juros_total=payload.resultado_simulacao.get("juros_total"),
@@ -98,7 +106,6 @@ def salvar_lead_e_simulacao(
     db.add(simulacao)
     db.commit()
     db.refresh(simulacao)
-
     return simulacao
 
 @router.post("/", response_model=schemas.SimulacaoOut, status_code=status.HTTP_201_CREATED)
