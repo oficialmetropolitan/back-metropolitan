@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, EmailStr, Field, validator
 from datetime import datetime
-from validators import validar_cpf, _only_digits # Ajuste o caminho se necessário
+from validators import validar_cpf, _only_digits, senha_forte
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -19,6 +19,17 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+
+
+    @validator('password')
+    def validate_password(cls, value: str) -> str:
+
+        if not senha_forte(value):
+            raise ValueError(
+                'A senha deve conter pelo menos 8 caracteres, '
+                'uma letra maiúscula, uma minúscula, um número e um caractere especial.'
+            )
+        return value
 
 class UserOut(UserBase):
     id: int

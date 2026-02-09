@@ -15,10 +15,10 @@ def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emp
     Calcula os valores de empréstimo com base na Tabela Price.
     Ajusta a taxa de juros conforme o produto e garantias.
     """
-    # 1. Definição da taxa de juros padrão
+
     taxa_juros_mensal = 0.03  
     
-    # 2. Lógica de faixas de taxa por produto
+   
     if tipo_emprestimo == 'imovel-garantia':
         # Se for imóvel caro (Ex: > 500k), a taxa cai para 1%
         if dados_especificos and float(dados_especificos.get("valor_imovel", 0)) >= 500000:
