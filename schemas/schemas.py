@@ -7,7 +7,7 @@ from datetime import datetime, date
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from validators import validar_cpf, _only_digits
-# --- Schemas de Usuário ---
+
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
@@ -26,6 +26,16 @@ class UserBase(BaseModel):
         
 class UserCreate(UserBase):
     password: str
+    
+    @validator('password')
+    def validate_password(cls, value: str) -> str:
+
+        if not senha_forte(value):
+            raise ValueError(
+                'A senha deve conter pelo menos 8 caracteres, '
+                'uma letra maiúscula, uma minúscula, um número e um caractere especial.'
+            )
+        return value
 
 class UserOut(UserBase):
     id: int
@@ -33,7 +43,7 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
-# --- Schemas dze Perfil ---
+
 class PerfilUsuarioBase(BaseModel):
     # Dados pessoais
     data_nascimento: Optional[date] = None

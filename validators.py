@@ -28,12 +28,10 @@ def senha_forte(s: str) -> tuple[bool, str]:
     # Regra simples: 8+ chars, maiúscula, minúscula, número e símbolo
     if len(s) < 8:
         return False, "Senha deve ter no mínimo 8 caracteres"
-    if not re.search(r"[A-Z]", s):
-        return False, "Senha deve ter pelo menos 1 letra maiúscula"
+
     if not re.search(r"[a-z]", s):
         return False, "Senha deve ter pelo menos 1 letra minúscula"
     if not re.search(r"\d", s):
         return False, "Senha deve ter pelo menos 1 número"
-    if not re.search(r"[^A-Za-z0-9]", s):
-        return False, "Senha deve ter pelo menos 1 símbolo"
+
     return True, ""

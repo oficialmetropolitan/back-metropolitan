@@ -16,19 +16,18 @@ class UserBase(BaseModel):
         if not validar_cpf(cpf_digits):
             raise ValueError('CPF inválido')
         return cpf_digits
-
 class UserCreate(UserBase):
     password: str
-
-
+    
     @validator('password')
     def validate_password(cls, value: str) -> str:
-
-        if not senha_forte(value):
-            raise ValueError(
-                'A senha deve conter pelo menos 8 caracteres, '
-                'uma letra maiúscula, uma minúscula, um número e um caractere especial.'
-            )
+        # Capturamos os dois valores retornados pela função
+        valida, mensagem = senha_forte(value)
+        
+        if not valida:
+            # Lançamos o erro com a mensagem específica que veio da função
+            raise ValueError(mensagem)
+            
         return value
 
 class UserOut(UserBase):
