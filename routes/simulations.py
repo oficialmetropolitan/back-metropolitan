@@ -4,12 +4,12 @@ from sqlalchemy.orm import Session
 import schemas.simulacao as schemas 
 import security
 from db import get_db
-from models.models import Simulacao, User, Lead # Certifique-se de ter criado a classe Lead no models.py
+from models.models import Simulacao, User, Lead 
 
 router = APIRouter(prefix="/api/simulacoes", tags=["Simulações"])
 
 
-# Função de lógica interna (mantida e centralizada)
+
 def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emprestimo: str, dados_especificos: dict = None):
     """
     Calcula os valores de empréstimo com base na Tabela Price.
@@ -18,21 +18,20 @@ def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emp
 
     taxa_juros_mensal = 0.03  
     
-   
     if tipo_emprestimo == 'imovel-garantia':
-        # Se for imóvel caro (Ex: > 500k), a taxa cai para 1%
+    
         if dados_especificos and float(dados_especificos.get("valor_imovel", 0)) >= 500000:
-            taxa_juros_mensal = 0.01
+            taxa_juros_mensal = 0.02
         else:
-            taxa_juros_mensal = 0.015 # Ex: 1.5% para Home Equity padrão
+            taxa_juros_mensal = 0.025 
             
     elif tipo_emprestimo == 'veiculo-garantia':
-        taxa_juros_mensal = 0.022 # Ex: 2.2% para Veículos
+        taxa_juros_mensal = 0.022 
         
     elif tipo_emprestimo == 'credito-consignado':
-        taxa_juros_mensal = 0.018 # Taxa menor para consignado
+        taxa_juros_mensal = 0.018 
     
-    # i = taxa, n = meses, pv = valor presente
+
     i = taxa_juros_mensal
     n = prazo_meses
     pv = valor_desejado
@@ -58,12 +57,12 @@ def calcular_valores_simulacao(valor_desejado: float, prazo_meses: int, tipo_emp
 
 @router.post("/calcular-imediato")
 def calcular_imediato(payload: schemas.SimulacaoPublicaRequest):
-    # Passamos os dados_especificos (como valor do imóvel) para o cálculo
+    
     return calcular_valores_simulacao(
         payload.valor_desejado,
         payload.prazo_meses,
         payload.tipo_emprestimo,
-        payload.dados_especificos # Importante: adicione este campo no seu Schema Pydantic
+        payload.dados_especificos 
     )
 
 @router.post("/salvar-lead", status_code=201)
@@ -85,8 +84,8 @@ def salvar_lead_e_simulacao(
         db.add(lead)
         db.flush()
 
-    # 2. Simulação (Salvando o Dossiê completo)
-    # Aqui guardamos o 'resultado' vindo do front para garantir fidelidade ao que o cliente viu
+ 
+    
     simulacao = Simulacao(
         valor_desejado=payload.valor_desejado,
         prazo_meses=payload.prazo_meses,
@@ -138,9 +137,6 @@ def listar_minhas_simulacoes(
 ):
     return db.query(Simulacao).filter(Simulacao.user_id == current_user.id).all()
 
-# ==========================================
-# 3. ROTAS ADMINISTRATIVAS (FINANCEIRO)
-# ==========================================
 
 @router.get("/admin/todas", response_model=List[schemas.SimulacaoOut])
 def admin_listar_tudo(
