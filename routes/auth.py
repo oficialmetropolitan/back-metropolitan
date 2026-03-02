@@ -267,7 +267,7 @@ def request_password_reset(
             data={"sub": user.email, "type": "reset"}, expires_delta=expires_delta
         )
         
-        reset_link = f"http://localhost:8080/redefinir-senha?token={reset_token}"
+        reset_link = f"http://bancometropolitan.com.br/redefinir-senha?token={reset_token}"
         html_body = f"""
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f7; padding: 20px;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden;">
