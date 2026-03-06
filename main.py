@@ -17,8 +17,7 @@ app = FastAPI(
     version="1.1.0"
 )
 
-# --- CORREÇÃO APLICADA AQUI ---
-# Adicionamos a porta 8000, onde seu front-end está rodando.
+
 origins = [
     "http://localhost:8080",
     "http://localhost:5173",
@@ -29,12 +28,13 @@ origins = [
     "http://bancometropolitan.com.br",        # Versão http (por precaução)
     "http://www.bancometropolitan.com.br",
     "https://front-metropolitan.vercel.app",
+    "https://painel.bancometropolitan.com.br"
 ]
 
 # Configuração do CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, # Usamos a lista definida acima
+    allow_origins=origins, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

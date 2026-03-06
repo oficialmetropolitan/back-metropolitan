@@ -319,11 +319,12 @@ def reset_password(payload: ResetPasswordPayload, db: Session = Depends(get_db))
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    email = security.verify_token(payload.token, credentials_exception)
+    # 🛡️ A MÁGICA AQUI: Passamos expected_type="reset" para o porteiro!
+    email = security.verify_token(payload.token, credentials_exception, expected_type="reset")
     user = security.get_user_by_email(db, email=email)
 
     if not user:
-        raise credentials_exception # Não deveria acontecer se o token for válido, mas é uma segurança extra
+        raise credentials_exception 
 
     # Atualiza a senha do usuário
     new_hashed_password = security.hash_password(payload.new_password)

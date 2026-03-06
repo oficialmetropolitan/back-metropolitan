@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -91,3 +91,45 @@ def get_current_admin(current_user: User = Depends(get_current_active_user)):
             detail="Acesso negado. Esta área é restrita a administradores."
         )
     return current_user
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        
+    to_encode.update({"exp": expire})
+    
+    # 🛡️ PROTEÇÃO 1: Se a rota não enviou um 'type', assumimos que é um token de Login normal ('access')
+    if "type" not in to_encode:
+        to_encode["type"] = "access"
+        
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+# 🛡️ PROTEÇÃO 2: Adicionamos o parâmetro 'expected_type' com padrão "access"
+def verify_token(token: str, credentials_exception, expected_type: str = "access"):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        token_type: str = payload.get("type") # Lemos a etiqueta do token
+        
+        if email is None:
+            raise credentials_exception
+            
+        # 🛡️ PROTEÇÃO 3: Se o cara mandou um token de 'access' pra resetar a senha, a gente barra!
+        if token_type != expected_type:
+            # Você pode até criar uma exceção customizada aqui se quiser ser mais específico no erro
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Tipo de token inválido. Esperado: {expected_type}, Recebido: {token_type}",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        return email
+        
+    except JWTError: # Mude para pyjwt.InvalidTokenError se estiver usando a biblioteca PyJWT
+        raise credentials_exception
